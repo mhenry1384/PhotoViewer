@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Photo Viewer</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <div id="image-container">
+        <img id="photo" alt="" draggable="false" />
+      </div>
+      <div id="info-bar">
+        <span id="filename"></span>
+        <span id="counter"></span>
+      </div>
+      <div id="no-image">
+        <div class="no-image-icon">&#128444;</div>
+        <p>No image open</p>
+        <p class="hint">Open a JPG or PNG file with this application</p>
+      </div>
+    </div>
+    <div id="toast" class="toast"></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
