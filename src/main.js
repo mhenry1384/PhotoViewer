@@ -1,4 +1,5 @@
 import { invoke, convertFileSrc } from "@tauri-apps/api/core";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 let images = [];
 let currentIndex = -1;
@@ -110,6 +111,9 @@ document.addEventListener("keydown", async (e) => {
       break;
     case "Delete":
       await trashCurrent();
+      break;
+    case "Escape":
+      await getCurrentWindow().close();
       break;
   }
 });
