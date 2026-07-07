@@ -187,11 +187,25 @@ fn get_images_in_folder(folder: String) -> Vec<String> {
         }
     }
 
-    images.sort_by(|a, b| {
-        a.to_lowercase().cmp(&b.to_lowercase())
-    });
+    images.sort_by(|a, b| natural_cmp(a, b));
 
     images
+}
+
+// Matches Windows Explorer's "Name" sort order, which is digit-aware (e.g.
+// "img2" before "img10", unlike plain ordinal string comparison).
+fn natural_cmp(a: &str, b: &str) -> std::cmp::Ordering {
+    use windows::{core::PCWSTR, Win32::UI::Shell::StrCmpLogicalW};
+
+    let a_wide: Vec<u16> = a.encode_utf16().chain(Some(0)).collect();
+    let b_wide: Vec<u16> = b.encode_utf16().chain(Some(0)).collect();
+    let result = unsafe {
+        StrCmpLogicalW(
+            PCWSTR::from_raw(a_wide.as_ptr()),
+            PCWSTR::from_raw(b_wide.as_ptr()),
+        )
+    };
+    result.cmp(&0)
 }
 
 #[tauri::command]
@@ -262,4 +276,27 @@ pub fn run() {
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::natural_cmp;
+    use std::cmp::Ordering;
+
+    #[test]
+    fn matches_explorer_on_paren_duplicates() {
+        // Verified against real Explorer / .NET Sort-Object: the "(1)" duplicate
+        // sorts before its base file, since ' ' (0x20) precedes '.' (0x2E). This
+        // matches Explorer's Name-column order, which is the point of using
+        // StrCmpLogicalW rather than a bespoke natural-sort implementation.
+        assert_eq!(
+            natural_cmp("IMG_20260620_214249.heic", "IMG_20260620_214249 (1).heic"),
+            Ordering::Greater
+        );
+    }
+
+    #[test]
+    fn digit_runs_compare_numerically() {
+        assert_eq!(natural_cmp("IMG_2.heic", "IMG_10.heic"), Ordering::Less);
+    }
 }
