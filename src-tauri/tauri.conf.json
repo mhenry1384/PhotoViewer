@@ -52,6 +52,12 @@
         "name": "PNG Image",
         "description": "PNG Image File",
         "mimeType": "image/png"
+      },
+      {
+        "ext": ["heic", "heif"],
+        "name": "HEIC Image",
+        "description": "High Efficiency Image File",
+        "mimeType": "image/heic"
       }
     ]
   }

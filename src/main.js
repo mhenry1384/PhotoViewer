@@ -29,7 +29,8 @@ function getFolder(filePath) {
 
 async function displayImage(filePath) {
   photo.classList.remove("loaded");
-  const url = convertFileSrc(filePath);
+  const displayPath = await invoke("get_display_path", { filePath });
+  const url = convertFileSrc(displayPath);
 
   await new Promise((resolve, reject) => {
     photo.onload = resolve;
@@ -46,11 +47,25 @@ async function displayImage(filePath) {
   document.title = `${name} — Photo Viewer`;
 }
 
+const PREFETCH_COUNT = 10;
+
+function prefetchUpcoming() {
+  if (images.length === 0) return;
+  const upcoming = [];
+  for (let i = 1; i <= Math.min(PREFETCH_COUNT, images.length - 1); i++) {
+    upcoming.push(images[(currentIndex + i) % images.length]);
+  }
+  if (upcoming.length > 0) {
+    invoke("prefetch_display_paths", { filePaths: upcoming }).catch(() => {});
+  }
+}
+
 async function navigate(delta) {
   if (images.length === 0) return;
   currentIndex = ((currentIndex + delta) % images.length + images.length) % images.length;
   try {
     await displayImage(images[currentIndex]);
+    prefetchUpcoming();
   } catch {
     showToast("Failed to load image");
   }
@@ -91,6 +106,7 @@ async function trashCurrent() {
 
   try {
     await displayImage(images[currentIndex]);
+    prefetchUpcoming();
   } catch {
     showToast("Failed to load next image");
   }
@@ -113,6 +129,7 @@ document.addEventListener("keydown", async (e) => {
       await trashCurrent();
       break;
     case "Escape":
+      invoke("cleanup_temp_files").catch(() => {});
       await getCurrentWindow().close();
       break;
   }
@@ -142,6 +159,7 @@ async function initialize() {
 
   try {
     await displayImage(images[currentIndex]);
+    prefetchUpcoming();
   } catch {
     showToast("Failed to load image");
   }
